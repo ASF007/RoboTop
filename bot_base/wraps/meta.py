@@ -1,10 +1,9 @@
 import asyncio
 from typing import Optional, TYPE_CHECKING, Any
 
-try:
-    import nextcord
-except ModuleNotFoundError:
-    import disnake as nextcord
+
+import discord
+
 
 from . import channel
 
@@ -147,7 +146,7 @@ class Meta:
         contain_timestamp: bool = True,
         include_command_invoker: bool = True,
         **kwargs,
-    ) -> nextcord.Message:
+    ) -> discord.Message:
         """Wraps a string to send formatted as an embed"""
         from bot_base.context import BotContext
 
@@ -159,7 +158,7 @@ class Meta:
             else self  # Anything else (member.send)
         )
 
-        embed = nextcord.Embed(description=desc)
+        embed = discord.Embed(description=desc)
 
         if color:
             embed.colour = color
@@ -178,7 +177,7 @@ class Meta:
 
             embed.set_footer(text=text, icon_url=icon_url)
 
-        if reply and isinstance(target, nextcord.Message):
+        if reply and isinstance(target, discord.Message):
             return await target.reply(embed=embed, **kwargs)
         else:
             return await target.send(embed=embed, **kwargs)
@@ -195,15 +194,15 @@ class Meta:
         from bot_base.context import BotContext
 
         if title and not description:
-            embed = nextcord.Embed(
+            embed = discord.Embed(
                 title=title,
             )
         elif not title and description:
-            embed = nextcord.Embed(
+            embed = discord.Embed(
                 description=description,
             )
         elif title and description:
-            embed = nextcord.Embed(
+            embed = discord.Embed(
                 title=title,
                 description=description,
             )

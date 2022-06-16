@@ -1,19 +1,15 @@
-try:
-    import nextcord
-    from nextcord.ext import commands
-except ModuleNotFoundError:
-    import disnake as nextcord
-    from disnake.ext import commands
+import discord
+from discord.ext import commands
 
 from bot_base.wraps.meta import Meta
 
 
-class WrappedUser(Meta, nextcord.User):
+class WrappedUser(Meta, discord.User):
     """Wraps discord.user for ease of stuff"""
 
     @classmethod
     async def convert(cls, ctx, argument: str) -> "WrappedUser":
-        user: nextcord.User = await commands.UserConverter().convert(
+        user: discord.User = await commands.UserConverter().convert(
             ctx=ctx, argument=argument
         )
         return cls(user, ctx.bot)

@@ -3,6 +3,7 @@ import re
 time_regex = re.compile(r"(( ?(\d{1,5})(h|s|m|d))+)")
 time_dict = {"h": 3600, "s": 1, "m": 60, "d": 86400}
 
+# TODO lol
 
 async def time_convertor(argument):
     raise RuntimeWarning("Lol dont")

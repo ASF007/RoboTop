@@ -1,17 +1,17 @@
 from typing import Union
 
 try:
-    from nextcord import abc
-    from nextcord.ext import commands
+    from discord import abc
+    from discord.ext import commands
 except ModuleNotFoundError:
-    from disnake import abc
-    from disnake.ext import commands
+    from discord import abc
+    from discord.ext import commands
 
 from bot_base.wraps.meta import Meta
 
 
 class WrappedChannel(Meta, abc.GuildChannel, abc.PrivateChannel):  # noqa
-    """Wraps nextcord.TextChannel for ease of stuff"""
+    """Wraps discord.TextChannel for ease of stuff"""
 
     @classmethod
     async def convert(cls, ctx, argument: str) -> "WrappedChannel":

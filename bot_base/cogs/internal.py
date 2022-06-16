@@ -1,14 +1,16 @@
 import logging
+import traceback
+from contextlib import redirect_stdout
+from io import StringIO
+from textwrap import indent
+from timeit import default_timer
 
 from bot_base import BotBase
 from bot_base.context import BotContext
 
-try:
-    import nextcord as discord
-    from nextcord.ext import commands
-except ModuleNotFoundError:
-    import disnake as discord
-    from disnake.ext import commands
+
+import discord as discord
+from discord.ext import commands
 
 log = logging.getLogger(__name__)
 
@@ -16,6 +18,13 @@ log = logging.getLogger(__name__)
 class Internal(commands.Cog):
     def __init__(self, bot):
         self.bot: BotBase = bot
+
+    def cleanup_code(self, content):
+        """Cleanup code blocks"""
+        if content.startswith("```") and content.endswith("```"):
+            return "\n".join(content.split("\n")[1:-1])
+
+        return content.strip("` \n")
 
     def cog_check(self, ctx) -> bool:
         try:
@@ -27,6 +36,56 @@ class Internal(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         log.info(f"{self.__class__.__name__}: Ready")
+
+    @commands.command(hidden=True)
+    @commands.is_owner()
+    async def eval(self, ctx: BotContext, *, code: str):
+        """
+        Evaluates the given code.
+        Credits: Hyena Bot
+
+        Example:
+        `.eval code`
+        """
+
+        embed = discord.Embed(color=discord.Color.blurple())
+        embed.set_author(
+            name="Evaluate code",
+        )
+        start = default_timer()
+        code = self.cleanup_code(code)
+        code = f"async def code():\n{indent(code, '    ')}"
+        _global_vars = {"bot": self.bot, "ctx": ctx, "discord": discord}
+        buf = StringIO()
+
+        try:
+            exec(code, _global_vars)
+        except Exception as e:
+            embed.description = f"```py\n{e.__class__.__name__}: {e}\n```"
+            embed.color = discord.Colour.red()
+        else:
+            func = _global_vars["code"]
+            try:
+                with redirect_stdout(buf):
+                    resp = await func()
+            except Exception as e:
+                console = buf.getvalue()
+                embed.description = f"```py\n{console}{traceback.format_exc()}\n```"
+                embed.color = discord.Colour.red()
+            else:
+                console = buf.getvalue()
+                if not resp and console:
+                    embed.description = f"```py\n{console}\n```"
+                elif not resp and not console:
+                    embed.description = "```<No output>```"
+                else:
+                    embed.description = f"```py\n{console}{resp}\n```"
+            stop = default_timer()
+
+            embed.set_footer(
+                text="Evaluated in: {:.5f} seconds".format(stop - start),
+            )
+            await ctx.send(embed=embed)
 
     @commands.group(invoke_without_command=True)
     @commands.is_owner()
@@ -115,5 +174,5 @@ class Internal(commands.Cog):
         await ctx.send_basic_embed("I have completed that action for you.")
 
 
-def setup(bot):
-    bot.add_cog(Internal(bot))
+async def setup(bot):
+    await bot.add_cog(Internal(bot))

@@ -44,11 +44,11 @@ class BlacklistManager:
 
         if is_guild_blacklist:
             self.guilds.add(item)
-            await self.db.guild_blacklist.upsert({"_id": item, "reason": reason})
+            await self.db.guild_blacklist.upsert({"_id": item}, {"reason": reason})
 
         else:
             self.users.add(item)
-            await self.db.user_blacklist.upsert({"_id": item, "reason": reason})
+            await self.db.user_blacklist.upsert({"_id": item}, {"reason": reason})
 
     async def remove_from_blacklist(
         self, item: int, is_guild_blacklist: bool = True

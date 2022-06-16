@@ -1,9 +1,6 @@
 from typing import TYPE_CHECKING
 
-try:
-    from nextcord.ext import commands
-except ModuleNotFoundError:
-    from disnake.ext import commands
+from discord.ext import commands
 
 from bot_base.wraps import Meta
 

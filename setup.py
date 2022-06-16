@@ -32,8 +32,8 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/Skelmis/DPY-Bot-Base",
     extras_requires={
-        "nextcord": ["nextcord"],
-        "disnake": ["disnake"],
+        "discord": ["discord"],
+        "discord": ["discord"],
     },
     packages=[
         "bot_base",

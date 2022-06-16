@@ -1,7 +1,4 @@
-try:
-    from nextcord import DiscordException
-except ModuleNotFoundError:
-    from disnake import DiscordException
+from discord import DiscordException
 
 
 class PrefixNotFound(DiscordException):

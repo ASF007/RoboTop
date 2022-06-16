@@ -1,9 +1,11 @@
 import logging
 import os
 
-
+import discord
 from bot_base import BotBase
+from dotenv import load_dotenv
 
+load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
 bot = BotBase(
@@ -11,6 +13,7 @@ bot = BotBase(
     mongo_url=os.environ["MONGO_URL"],
     mongo_database_name="my_bot",
     load_builtin_commands=True,
+    intents = discord.Intents.all()
 )
 
 

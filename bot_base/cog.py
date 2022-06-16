@@ -3,10 +3,8 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING
 
-try:
-    from nextcord.ext import commands
-except ModuleNotFoundError:
-    from disnake.ext import commands
+from discord.ext import commands
+
 
 if TYPE_CHECKING:
     from bot_base import BotBase

@@ -3,22 +3,19 @@ import sys
 import logging
 import traceback
 from typing import Optional, List, Any, Dict, Union, Callable
+import aiohttp
 
 import humanize
 
 from bot_base import CancellableWaitFor
 from bot_base.caches import TimedCache
 
-try:
-    import nextcord
-    from nextcord import DiscordException, abc
-    from nextcord.ext import commands
-    from nextcord.ext.commands.converter import CONVERTER_MAPPING
-except ModuleNotFoundError:
-    import disnake as nextcord
-    from disnake import DiscordException, abc
-    from disnake.ext import commands
-    from disnake.ext.commands.converter import CONVERTER_MAPPING
+
+import discord
+from discord import DiscordException, abc
+from discord.ext import commands
+from discord.ext.commands.converter import CONVERTER_MAPPING
+
 
 from bot_base.blacklist import BlacklistManager
 from bot_base.context import BotContext
@@ -34,9 +31,9 @@ from bot_base.wraps import (
 log = logging.getLogger(__name__)
 
 
-CONVERTER_MAPPING[nextcord.User] = WrappedUser
-CONVERTER_MAPPING[nextcord.Member] = WrappedMember
-CONVERTER_MAPPING[nextcord.TextChannel] = WrappedChannel
+CONVERTER_MAPPING[discord.User] = WrappedUser
+CONVERTER_MAPPING[discord.Member] = WrappedMember
+CONVERTER_MAPPING[discord.TextChannel] = WrappedChannel
 
 
 class BotBase(commands.Bot):
@@ -44,7 +41,7 @@ class BotBase(commands.Bot):
         self,
         *args,
         leave_db: bool = False,
-        do_command_stats: bool = True,
+        do_command_stats: bool = False,
         **kwargs,
     ) -> None:
         if not leave_db:
@@ -73,8 +70,6 @@ class BotBase(commands.Bot):
 
         super().__init__(*args, **kwargs)
 
-        if kwargs.pop("load_builtin_commands", None):
-            self.load_extension("bot_base.cogs.internal")
 
         # These events do include the on_ prefix
         self._single_event_type_sheet: Dict[str, Callable] = {
@@ -86,6 +81,8 @@ class BotBase(commands.Bot):
                 self.get_wrapped_message(after),
             )
         }
+        self.load_builtinn = kwargs.pop("load_builtin_commands", None)
+        
 
     @property
     def uptime(self) -> datetime.datetime:
@@ -101,7 +98,7 @@ class BotBase(commands.Bot):
             await self.blacklist.initialize()
 
     async def get_command_prefix(
-        self, bot: "BotBase", message: nextcord.Message
+        self, bot: "BotBase", message: discord.Message
     ) -> List[str]:
         try:
             prefix = await self.get_guild_prefix(guild_id=message.guild.id)
@@ -125,6 +122,11 @@ class BotBase(commands.Bot):
             prefix = content[:prefix_length]
 
         return prefix
+
+    async def setup_hook(self) -> None:
+        self.session = aiohttp.ClientSession()
+        if self.load_builtinn:
+            await self.load_extension("bot_base.cogs.internal")
 
     async def get_guild_prefix(self, guild_id: Optional[int] = None) -> str:
         """
@@ -171,7 +173,7 @@ class BotBase(commands.Bot):
             await ctx.author.send("Sorry. This command is disabled and cannot be used.")
         elif isinstance(error, commands.CommandInvokeError):
             original = error.original
-            if not isinstance(original, nextcord.HTTPException):
+            if not isinstance(original, discord.HTTPException):
                 print(f"In {ctx.command.qualified_name}:", file=sys.stderr)
                 traceback.print_tb(original.__traceback__)
                 print(f"{original.__class__.__name__}: {original}", file=sys.stderr)
@@ -218,12 +220,12 @@ class BotBase(commands.Bot):
                 )
         log.debug(f"Command executed: `{ctx.command.qualified_name}`")
 
-    async def on_guild_join(self, guild: nextcord.Guild) -> None:
+    async def on_guild_join(self, guild: discord.Guild) -> None:
         if self.blacklist and guild.id in self.blacklist.guilds:
             log.info("Leaving blacklisted Guild(id=%s)", guild.id)
             await guild.leave()
 
-    async def process_commands(self, message: nextcord.Message) -> None:
+    async def process_commands(self, message: discord.Message) -> None:
         ctx = await self.get_context(message, cls=BotContext)
 
         if self.blacklist and ctx.author.id in self.blacklist.users:
@@ -247,7 +249,7 @@ class BotBase(commands.Bot):
 
         await self.invoke(ctx)
 
-    async def on_message(self, message: nextcord.Message) -> None:
+    async def on_message(self, message: discord.Message) -> None:
         if message.author.bot:
             log.debug("Ignoring a message from a bot.")
             return
@@ -273,7 +275,7 @@ class BotBase(commands.Bot):
         channel = await self.fetch_channel(channel_id)
         return self.get_wrapped_channel(channel)
 
-    async def get_or_fetch_guild(self, guild_id: int) -> nextcord.Guild:
+    async def get_or_fetch_guild(self, guild_id: int) -> discord.Guild:
         """Looks up a guild in cache or fetches if not found."""
         guild = self.get_guild(guild_id)
         if guild:
@@ -293,22 +295,22 @@ class BotBase(commands.Bot):
 
     def get_wrapped_channel(
         self,
-        channel: Union[abc.GuildChannel, abc.PrivateChannel, nextcord.Thread],
+        channel: Union[abc.GuildChannel, abc.PrivateChannel, discord.Thread],
     ) -> Union[WrappedThread, WrappedChannel]:
-        if isinstance(channel, nextcord.Thread):
+        if isinstance(channel, discord.Thread):
             return WrappedThread(channel, self)
 
         return WrappedChannel(channel, self)
 
     def get_wrapped_person(
-        self, person: Union[nextcord.User, nextcord.Member]
+        self, person: Union[discord.User, discord.Member]
     ) -> Union[WrappedUser, WrappedMember]:
-        if isinstance(person, nextcord.Member):
+        if isinstance(person, discord.Member):
             return WrappedMember(person, self)
 
         return WrappedUser(person, self)
 
-    def get_wrapped_message(self, message: nextcord.Message) -> nextcord.Message:
+    def get_wrapped_message(self, message: discord.Message) -> discord.Message:
         """
         Wrap the relevant params in message with meta classes.
 
