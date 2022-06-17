@@ -43,8 +43,8 @@ class BotBase(commands.Bot):
         mongo_url: str,
         command_prefix: str,
         leave_db: bool = False,
-        do_command_stats: bool = True,
-        load_builtin_commands: bool = False,
+        do_command_stats: bool = False,
+        load_builtin_commands: bool = True,
         mongo_database_name: Optional[str] = None,
         **kwargs,
     ) -> None:
@@ -82,7 +82,7 @@ class BotBase(commands.Bot):
                 self.get_wrapped_message(after),
             )
         }
-        self.load_builtinn = kwargs.pop("load_builtin_commands", None)
+        self.load_builtinn = load_builtin_commands
         
 
     @property

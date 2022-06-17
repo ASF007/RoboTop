@@ -37,9 +37,17 @@ async def echo(ctx):
 
 @bot.command()
 async def ping(ctx):
+    d = (("Water#2222", 554), ("Ace#2222", 333))
+    x = []
+    for i in d:
+        fmt = (
+            f"**Name:** {i[0]}\n"
+            f"**Warn ID:** {i[1]}"
+        )
+        x.append(fmt)
 
-    pag = discordPaginator(1, ["hee", "#################", "HHHH"])
-    pag.start(ctx)
+    pag = discordPaginator(1, x)
+    await pag.start(context = ctx)
     
 
 bot.run(os.environ["TOKEN"])
