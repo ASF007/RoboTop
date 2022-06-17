@@ -1,7 +1,10 @@
 import logging
 import os
 
+<<<<<<< HEAD
 import discord
+=======
+>>>>>>> 45ff7a15c916b99d44bf5a2b208b645e4e3d72ba
 from bot_base import BotBase
 from dotenv import load_dotenv
 
@@ -37,6 +40,5 @@ async def echo(ctx):
 @bot.command()
 async def ping(ctx):
     await ctx.send_basic_embed("Pong!")
-
 
 bot.run(os.environ["TOKEN"])
