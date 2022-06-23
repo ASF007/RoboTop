@@ -33,6 +33,7 @@ async def echo(ctx):
         return await ctx.send("You said nothing!")
 
     await ctx.send(text)
+    await ctx.send(bot.gen_uuid())
 
 
 @bot.command()

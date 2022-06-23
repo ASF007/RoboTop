@@ -1,5 +1,6 @@
 import datetime
 import sys
+import random
 import logging
 import traceback
 from typing import Optional, List, Any, Dict, Union, Callable
@@ -27,6 +28,8 @@ from bot_base.wraps import (
     WrappedUser,
     WrappedThread,
 )
+
+from snowflake import SnowflakeGenerator
 
 log = logging.getLogger(__name__)
 
@@ -89,6 +92,16 @@ class BotBase(commands.Bot):
     def uptime(self) -> datetime.datetime:
         return self._uptime
 
+    def gen_uuid(self):
+        """Creates a snowflake id."""
+        snow_flake = SnowflakeGenerator(18)
+       
+        generated = []
+        for i in range(10):
+            generated.append(next(snow_flake))
+        return random.choice(generated)
+
+
     def get_bot_uptime(self) -> str:
         return humanize.precisedelta(
             self.uptime - datetime.datetime.now(tz=datetime.timezone.utc)
@@ -128,6 +141,11 @@ class BotBase(commands.Bot):
         self.session = aiohttp.ClientSession()
         if self.load_builtinn:
             await self.load_extension("bot_base.cogs.internal")
+
+    async def close(self):
+        await self.session.close()
+        await super().close()
+
 
     async def get_guild_prefix(self, guild_id: Optional[int] = None) -> str:
         """
