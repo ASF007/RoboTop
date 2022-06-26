@@ -3,7 +3,8 @@ import sys
 import random
 import logging
 import traceback
-from typing import Optional, List, Any, Dict, Union, Callable
+from typing import TYPE_CHECKING, Optional, List, Any, Dict, Union, Callable
+from pkgutil import iter_modules
 import aiohttp
 
 import humanize
@@ -28,6 +29,12 @@ from bot_base.wraps import (
     WrappedUser,
     WrappedThread,
 )
+try:
+    from Commands import EXTENSIONS
+except ModuleNotFoundError:
+    EXTENSIONS = None
+
+
 
 from snowflake import SnowflakeGenerator
 
@@ -137,8 +144,17 @@ class BotBase(commands.Bot):
 
         return prefix
 
+
     async def setup_hook(self) -> None:
         self.session = aiohttp.ClientSession()
+        if EXTENSIONS:
+            try:
+                for ext in EXTENSIONS:
+                    await self.load_extension(ext)
+                    log.info("Loaded: {ext}")
+            except Exception as e:
+                log.warn("Could not load: {ext}")
+
         if self.load_builtinn:
             await self.load_extension("bot_base.cogs.internal")
 
