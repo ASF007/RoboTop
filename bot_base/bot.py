@@ -148,13 +148,8 @@ class BotBase(commands.Bot):
     async def setup_hook(self) -> None:
         self.session = aiohttp.ClientSession()
         if EXTENSIONS:
-            try:
-                for ext in EXTENSIONS:
-                    await self.load_extension(ext)
-                    log.info("Loaded: {ext}")
-            except Exception as e:
-                log.warn("Could not load: {ext}")
-
+            for ext in EXTENSIONS:
+                await self.load_extension(ext)
         if self.load_builtinn:
             await self.load_extension("bot_base.cogs.internal")
 
