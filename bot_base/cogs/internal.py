@@ -16,6 +16,8 @@ log = logging.getLogger(__name__)
 
 
 class Internal(commands.Cog):
+    EMOJI = "🧰"
+    
     def __init__(self, bot):
         self.bot: BotBase = bot
 
@@ -37,15 +39,15 @@ class Internal(commands.Cog):
     async def on_ready(self):
         log.info(f"{self.__class__.__name__}: Ready")
 
-    @commands.command(hidden=True)
+
+    @commands.command(aliases = ["e", "ev"], hidden=True)
     @commands.is_owner()
     async def eval(self, ctx: BotContext, *, code: str):
         """
         Evaluates the given code.
-        Credits: Hyena Bot
 
         Example:
-        `.eval code`
+        `!eval code`
         """
 
         embed = discord.Embed(color=discord.Color.blurple())
@@ -87,24 +89,29 @@ class Internal(commands.Cog):
             )
             await ctx.send(embed=embed)
 
-    @commands.group(invoke_without_command=True)
+    @commands.group(aliases = ["bl"], invoke_without_command=True)
     @commands.is_owner()
     async def blacklist(self, ctx: BotContext) -> None:
-        """Top level blacklist interface"""
+        """Top level blacklist interface."""
         await ctx.send_help(ctx.command)
 
-    @blacklist.group(invoke_without_command=True)
+    @blacklist.group(aliases = ["a"], invoke_without_command=True)
     @commands.is_owner()
     async def add(self, ctx: BotContext) -> None:
-        """Add something to the blacklist"""
+        """Add something to the blacklist."""
         await ctx.send_help(ctx.command)
 
-    @add.command(name="person")
+    @add.command(name="person", aliases = ["user"])
     @commands.is_owner()
     async def add_person(
         self, ctx: BotContext, user: discord.Object, *, reason=None
     ) -> None:
-        """Add someone to the blacklist"""
+        """
+        Add someone to the blacklist.
+
+        Example:
+        `!blacklist add person 899992992929`
+        """
         await self.bot.blacklist.add_to_blacklist(
             user.id, reason=reason, is_guild_blacklist=False
         )
@@ -112,9 +119,13 @@ class Internal(commands.Cog):
 
     @add.command(name="guild")
     @commands.is_owner()
-    async def add_guild(
-        self, ctx: BotContext, guild: discord.Object, *, reason=None
-    ) -> None:
+    async def add_guild(self, ctx: BotContext, guild: discord.Object, *, reason=None) -> None:
+        """
+        Add a server to the blacklist.
+
+        Example:
+        `!blacklist add guild 71777777777`
+        """
         await self.bot.blacklist.add_to_blacklist(
             guild.id, reason=reason, is_guild_blacklist=True
         )
@@ -122,10 +133,15 @@ class Internal(commands.Cog):
             f"I have added the guild `{guild.id}` to the blacklist"
         )
 
-    @blacklist.command()
+    @blacklist.command(aliases = ["l"])
     @commands.is_owner()
     async def list(self, ctx: BotContext) -> None:
-        """List all current blacklists"""
+        """
+        List the current users/servers in the blacklist.
+
+        Example:
+        `!blacklist list`
+        """
         if self.bot.blacklist.users:
             user_blacklists = "\n".join(f"`{u}`" for u in self.bot.blacklist.users)
         else:
@@ -143,18 +159,22 @@ class Internal(commands.Cog):
             )
         )
 
-    @blacklist.group(invoke_without_command=True)
+    @blacklist.group(aliases = ["rm", "r"], invoke_without_command=True)
     @commands.is_owner()
     async def remove(self, ctx: BotContext) -> None:
-        """Remove something from the blacklist"""
+        """Remove something from the blacklist."""
         await ctx.send_help(ctx.command)
 
-    @remove.command(name="person")
+    @remove.command(name="person", aliases = ["user"])
     @commands.is_owner()
     async def remove_person(self, ctx: BotContext, user: discord.Object) -> None:
-        """Remove a person from the blacklist.
+        """
+        Remove a person from the blacklist.
 
-        Does nothing if they weren't blacklisted.
+        Note: Does nothing if they weren't blacklisted.
+
+        Example:
+        `!blacklist remove person 899992992929`
         """
         await self.bot.blacklist.remove_from_blacklist(
             user.id, is_guild_blacklist=False
@@ -167,6 +187,9 @@ class Internal(commands.Cog):
         """Remove a guild from the blacklist.
 
         Does nothing if they weren't blacklisted.
+
+        Example:
+        `!blacklist remove guild 899992992929`
         """
         await self.bot.blacklist.remove_from_blacklist(
             guild.id, is_guild_blacklist=True
